@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#f6f5ef">
+	<meta name="description" content="Descubre nutrición, belleza, cuidado personal y productos para tu hogar con Amway.">
+	<title>Amway | Bienestar para cada día</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="../CSS/styles.css">
+	<script src="../JS/app.js" defer></script>
+</head>
+<body>
+	<div class="announcement">Bienestar que se siente. Calidad en la que puedes confiar.</div>
+	<header class="site-header">
+		<a class="wordmark" href="#inicio" aria-label="Amway, ir al inicio">amway<span>.</span></a>
+		<form class="search-form" role="search" id="search-form">
+			<label class="sr-only" for="site-search">Buscar productos</label>
+			<input id="site-search" type="search" placeholder="¿Qué estás buscando?" autocomplete="off">
+			<button aria-label="Buscar" type="submit"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 4.5 4.5"></path></svg></button>
+		</form>
+		<div class="header-actions">
+			<a class="account-link" href="#iniciar-sesion">Iniciar sesión</a>
+			<a class="account-link signup-link" href="#crear-cuenta">Crear cuenta</a>
+			<button class="cart-button" id="cart-open" aria-label="Abrir carrito, 0 productos">
+				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.1 10.1a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 1.9-1.4L22 8H6"></path><circle cx="10" cy="20" r="1"></circle><circle cx="18" cy="20" r="1"></circle></svg>
+				<span class="cart-count" id="cart-count">0</span>
+			</button>
+		</div>
+	</header>
+
+	<nav class="category-nav" aria-label="Categorías principales">
+		<a href="#categoria-nutricion">Nutrición</a>
+		<a href="#categoria-belleza">Belleza</a>
+		<a href="#categoria-cuidado">Cuidado personal</a>
+		<a href="#categoria-hogar">En casa</a>
+		<a href="#catalogo" class="all-products-link">Ver todo <span aria-hidden="true">↗</span></a>
+	</nav>
+
+	<main id="storefront">
+		<section class="hero" id="inicio" aria-labelledby="hero-title">
+			<div class="hero-copy">
+				<p class="eyebrow"><span></span> Bienestar, a tu manera</p>
+				<h1 id="hero-title">Pequeñas elecciones.<br><em>Una vida más plena.</em></h1>
+				<p class="hero-description">Encuentra tus esenciales para sentirte bien, cuidar de los tuyos y hacer de cada día algo mejor.</p>
+				<a class="button button-dark" href="#catalogo">Explorar productos <span aria-hidden="true">↗</span></a>
+				<div class="hero-note"><span class="note-mark">A</span><span>Calidad pensada para acompañarte<br>en cada momento.</span></div>
+			</div>
+			<div class="hero-visual" role="img" aria-label="Productos de cuidado y bienestar sobre un fondo natural">
+				<div class="hero-stamp">BIENESTAR<br><strong>desde 1959</strong></div>
+				<div class="hero-caption"><span>01 / 04</span> Una rutina que se siente bien</div>
+			</div>
+			<div class="hero-side-label">CUIDADO CON INTENCIÓN · CALIDAD CADA DÍA</div>
+		</section>
+
+		<section class="category-section section-wrap" aria-labelledby="categories-title">
+			<div class="section-heading">
+				<div><p class="eyebrow">Encuentra tu favorito</p><h2 id="categories-title">Un mundo de <em>posibilidades</em></h2></div>
+				<a class="text-link" href="#catalogo">Ver todos los productos <span aria-hidden="true">→</span></a>
+			</div>
+			<div class="category-grid">
+				<a class="category-tile nutrition-tile" id="categoria-nutricion" href="#catalogo" data-category="Nutrición">
+					<span class="tile-number">01</span><span class="tile-art art-nutrition" aria-hidden="true">✳</span><span class="tile-content"><strong>Nutrición</strong><small>Vitaminas, energía y más</small></span><span class="tile-arrow">↗</span>
+				</a>
+				<a class="category-tile beauty-tile" id="categoria-belleza" href="#catalogo" data-category="Belleza">
+					<span class="tile-number">02</span><span class="tile-art art-beauty" aria-hidden="true">◌</span><span class="tile-content"><strong>Belleza</strong><small>Rituales para brillar</small></span><span class="tile-arrow">↗</span>
+				</a>
+				<a class="category-tile care-tile" id="categoria-cuidado" href="#catalogo" data-category="Cuidado personal">
+					<span class="tile-number">03</span><span class="tile-art art-care" aria-hidden="true">✺</span><span class="tile-content"><strong>Cuidado personal</strong><small>Esenciales para cada día</small></span><span class="tile-arrow">↗</span>
+				</a>
+				<a class="category-tile home-tile" id="categoria-hogar" href="#catalogo" data-category="En casa">
+					<span class="tile-number">04</span><span class="tile-art art-home" aria-hidden="true">⌂</span><span class="tile-content"><strong>En casa</strong><small>Un espacio para disfrutar</small></span><span class="tile-arrow">↗</span>
+				</a>
+			</div>
+			<div class="subcategory-list" aria-label="Subcategorías">
+				<div><strong>Nutrición</strong><span>Vitaminas y Suplementos</span><span>Control de peso</span><span>Nutrición deportiva</span><span>Bebidas de energía</span></div>
+				<div><strong>Belleza</strong><span>Cuidado de la piel</span><span>Maquillaje</span><span>Fragancia</span><span>Belleza Virtual Artistry</span></div>
+				<div><strong>Cuidado personal</strong><span>Baño y Cuidado del cuerpo</span><span>Cuidado del cabello</span><span>Cuidado bucal</span></div>
+				<div><strong>En casa</strong><span>Artículos de limpieza</span><span>Utensilios de cocina</span><span>Lavandería</span><span>Tratamiento de agua</span></div>
+			</div>
+		</section>
+
+		<section class="products-section" id="catalogo" aria-labelledby="products-title">
+			<div class="section-wrap">
+				<div class="section-heading products-heading">
+					<div><p class="eyebrow">Lo nuevo para ti</p><h2 id="products-title">Recién llegados <em>al bienestar</em></h2></div>
+					<a class="text-link" href="#catalogo" id="clear-filter">Ver catálogo completo <span aria-hidden="true">→</span></a>
+				</div>
+				<div class="filter-row" id="filter-row" aria-label="Filtrar productos">
+					<button class="filter-chip is-active" data-filter="Todos">Todos</button>
+					<button class="filter-chip" data-filter="Nutrición">Nutrición</button>
+					<button class="filter-chip" data-filter="Belleza">Belleza</button>
+					<button class="filter-chip" data-filter="Cuidado personal">Cuidado personal</button>
+					<button class="filter-chip" data-filter="En casa">En casa</button>
+					<span class="result-count" id="result-count" aria-live="polite"></span>
+				</div>
+				<div class="product-grid" id="product-grid"></div>
+				<p class="empty-state" id="empty-state" hidden>No encontramos productos con esa búsqueda. Prueba con otra palabra.</p>
+				<div class="catalog-cta"><p>Lo mejor de cada día empieza con una buena elección.</p><a class="button button-outline" href="#catalogo" id="catalog-cta-link">Descubrir el catálogo <span aria-hidden="true">↗</span></a></div>
+			</div>
+		</section>
+
+		<section class="promise-band">
+			<div class="promise-mark">A</div>
+			<p class="eyebrow">Nuestra promesa</p>
+			<h2>AMWAYPROMISE</h2>
+			<p>La satisfacción siempre será nuestro objetivo y la protección, nuestra promesa.</p>
+		</section>
+	</main>
+
+	<main class="account-page" id="account-page" hidden>
+		<a class="back-link" href="#inicio">← Volver a la tienda</a>
+		<section class="account-panel" aria-labelledby="account-title">
+			<div class="account-art"><p class="eyebrow">Bienestar para cada día</p><p class="account-art-quote">Tu próxima<br><em>buena elección</em><br>empieza aquí.</p><span>AMWAY · DESDE 1959</span></div>
+			<div class="account-form-wrap">
+				<a class="wordmark" href="#inicio">amway<span>.</span></a>
+				<p class="eyebrow" id="account-eyebrow">Qué gusto tenerte aquí</p>
+				<h1 id="account-title">Iniciar sesión</h1>
+				<p class="account-intro" id="account-intro">Ingresa a tu cuenta para continuar.</p>
+				<form id="account-form" novalidate>
+					<label for="account-email">Correo electrónico</label>
+					<input id="account-email" name="email" type="email" autocomplete="email" placeholder="nombre@correo.com" required>
+					<label for="account-password">Contraseña</label>
+					<div class="password-field"><input id="account-password" name="password" type="password" autocomplete="current-password" placeholder="Tu contraseña" required><button type="button" class="password-toggle" aria-label="Mostrar contraseña" data-target="account-password">Mostrar</button></div>
+					<div class="password-rules" id="password-rules" hidden>
+						<span data-rule="length">8 caracteres mínimo</span><span data-rule="upper">Una mayúscula</span><span data-rule="lower">Una minúscula</span><span data-rule="number">Un número</span><span data-rule="symbol">Un símbolo</span>
+					</div>
+					<div id="confirm-password-wrap" hidden><label for="confirm-password">Confirmar contraseña</label><div class="password-field"><input id="confirm-password" name="confirmPassword" type="password" autocomplete="new-password" placeholder="Escribe de nuevo tu contraseña"><button type="button" class="password-toggle" aria-label="Mostrar contraseña" data-target="confirm-password">Mostrar</button></div></div>
+					<button class="button button-dark account-submit" type="submit" id="account-submit">Iniciar sesión <span aria-hidden="true">→</span></button>
+					<p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+				</form>
+				<p class="account-switch" id="account-switch">¿No tienes una cuenta? <a href="#crear-cuenta">Crear cuenta</a></p>
+				<p class="security-note">Tu contraseña no se guarda en este navegador. La autenticación y la confirmación de correo requieren una conexión segura con el servicio de cuentas.</p>
+			</div>
+		</section>
+	</main>
+
+	<footer class="site-footer">
+		<a class="wordmark footer-wordmark" href="#inicio">amway<span>.</span></a>
+		<p>Bienestar para cada día, en cada etapa de tu vida.</p>
+		<span>© 2026 Amway</span>
+	</footer>
+
+	<div class="drawer-backdrop" id="drawer-backdrop" hidden></div>
+	<aside class="cart-drawer" id="cart-drawer" aria-labelledby="cart-title" aria-hidden="true" inert>
+		<div class="drawer-header"><div><p class="eyebrow">Tu selección</p><h2 id="cart-title">Tu carrito <span id="drawer-count">(0)</span></h2></div><button class="icon-button" id="cart-close" aria-label="Cerrar carrito">×</button></div>
+		<div class="cart-items" id="cart-items"></div>
+		<div class="cart-empty" id="cart-empty"><span class="empty-cart-icon">＋</span><p>Tu carrito está esperando algo especial.</p><a href="#catalogo" class="text-link" id="empty-cart-link">Explorar productos <span aria-hidden="true">→</span></a></div>
+		<div class="drawer-footer" id="drawer-footer" hidden><div class="subtotal-row"><span>Subtotal</span><strong id="cart-subtotal">$0.00</strong></div><p>Envío e impuestos calculados al finalizar.</p><button class="button button-dark checkout-button" id="checkout-button">Continuar compra <span aria-hidden="true">→</span></button></div>
+	</aside>
+</body>
+</html>
