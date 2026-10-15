@@ -89,6 +89,7 @@ const categoryRoutes = [
 let activeCategory = "Todos";
 let routeFilter = "Todos";
 let currentRouteCategory = null;
+let activeSubcategory = null;
 let searchTerm = "";
 let visibleSuggestions = [];
 let activeSuggestionIndex = -1;
@@ -133,11 +134,13 @@ function money(value) {
 }
 
 // Filtra los productos por categoría y texto de búsqueda.
-function getVisibleProducts(category) {
+function getVisibleProducts(category, subcategory = null) {
   return products.filter((product) => {
     const matchesCategory = category === "Todos" || product.category === category;
+    const matchesSubcategory = !subcategory ||
+      product.detail.toLocaleLowerCase("es") === subcategory.toLocaleLowerCase("es");
     const searchableText = `${product.name} ${product.category} ${product.detail}`.toLocaleLowerCase("es");
-    return matchesCategory && searchableText.includes(searchTerm);
+    return matchesCategory && matchesSubcategory && searchableText.includes(searchTerm);
   });
 }
 
@@ -213,6 +216,8 @@ function selectSearchSuggestion(productId) {
   searchTerm = product.name.toLocaleLowerCase("es");
   routeFilter = "Todos";
   activeCategory = "Todos";
+  activeSubcategory = null;
+  syncSubcategoryButtons();
   document.querySelectorAll("[data-filter]").forEach((button) => {
     button.classList.toggle("is-active", button.dataset.filter === activeCategory);
   });
@@ -287,8 +292,8 @@ function productCardsMarkup(visibleProducts) {
 }
 
 // Actualiza una cuadrícula de productos y sus estados vacíos y de resultados.
-function renderProductList(grid, count, emptyState, category) {
-  const visibleProducts = getVisibleProducts(category);
+function renderProductList(grid, count, emptyState, category, subcategory = null) {
+  const visibleProducts = getVisibleProducts(category, subcategory);
   grid.innerHTML = productCardsMarkup(visibleProducts);
   emptyState.hidden = visibleProducts.length > 0;
   count.textContent = `${visibleProducts.length} productos`;
@@ -300,7 +305,10 @@ function renderProducts() {
     productGrid,
     document.querySelector("#result-count"),
     document.querySelector("#empty-state"),
-    activeCategory
+    activeCategory,
+    activeSubcategory && activeSubcategory.category === activeCategory
+      ? activeSubcategory.name
+      : null
   );
 }
 
@@ -310,8 +318,57 @@ function renderRouteProducts() {
     routeProductGrid,
     document.querySelector("#route-result-count"),
     document.querySelector("#route-empty-state"),
-    currentRouteCategory || routeFilter
+    currentRouteCategory || routeFilter,
+    activeSubcategory &&
+      activeSubcategory.category === (currentRouteCategory || routeFilter)
+      ? activeSubcategory.name
+      : null
   );
+}
+
+function syncSubcategoryButtons() {
+  document.querySelectorAll(".subcategory-list [data-subcategory]").forEach((button) => {
+    const group = button.closest("[data-category]");
+    const isActive = activeSubcategory &&
+      activeSubcategory.category === group.dataset.category &&
+      activeSubcategory.name === button.dataset.subcategory;
+    button.classList.toggle("is-active", Boolean(isActive));
+    button.setAttribute("aria-pressed", String(Boolean(isActive)));
+  });
+}
+
+function selectSubcategory(button, isRouteSubcategory) {
+  const group = button.closest("[data-category]");
+  if (!group) return;
+
+  const isAlreadySelected = activeSubcategory &&
+    activeSubcategory.category === group.dataset.category &&
+    activeSubcategory.name === button.dataset.subcategory;
+  activeCategory = group.dataset.category;
+  activeSubcategory = isAlreadySelected
+    ? null
+    : { category: group.dataset.category, name: button.dataset.subcategory };
+  document.querySelectorAll("[data-filter]").forEach((filterButton) => {
+    filterButton.classList.toggle("is-active", filterButton.dataset.filter === activeCategory);
+  });
+  document.querySelectorAll("[data-route-filter]").forEach((filterButton) => {
+    filterButton.classList.toggle("is-active", filterButton.dataset.routeFilter === activeCategory);
+  });
+  syncSubcategoryButtons();
+  renderProducts();
+  renderRouteProducts();
+
+  if (isRouteSubcategory) {
+    document.querySelector("#route-product-grid").scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  } else {
+    document.querySelector("#catalogo").scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
 }
 
 // Sincroniza el contador, las líneas y el subtotal del carrito en pantalla.
@@ -426,6 +483,10 @@ function updateRoute() {
 
     if (selectedCategory) {
       currentRouteCategory = selectedCategory.category;
+      if (activeSubcategory && activeSubcategory.category !== selectedCategory.category) {
+        activeSubcategory = null;
+      }
+      activeCategory = selectedCategory.category;
       routeEyebrow.textContent = document.querySelector(".category-section .eyebrow").textContent;
       routeTitle.textContent = document.querySelector(
         `#${selectedCategory.tileId} .tile-content strong`
@@ -448,6 +509,7 @@ function updateRoute() {
       routeSubcategories.replaceChildren();
       routeSubcategories.hidden = true;
       routeFilterRow.hidden = false;
+      activeSubcategory = null;
       document.querySelectorAll("[data-route-filter]").forEach((button) => {
         button.classList.toggle("is-active", button.dataset.routeFilter === routeFilter);
       });
@@ -456,6 +518,7 @@ function updateRoute() {
       });
     }
 
+    syncSubcategoryButtons();
     renderProducts();
     renderRouteProducts();
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "smooth" }));
@@ -507,6 +570,8 @@ document.querySelector("#filter-row").addEventListener("click", (event) => {
   if (!button) return;
 
   activeCategory = button.dataset.filter;
+  activeSubcategory = null;
+  syncSubcategoryButtons();
   document.querySelectorAll("[data-filter]").forEach((chip) => {
     chip.classList.toggle("is-active", chip === button);
   });
@@ -518,10 +583,21 @@ document.querySelector("#route-filter-row").addEventListener("click", (event) =>
   if (!button) return;
 
   routeFilter = button.dataset.routeFilter;
+  activeSubcategory = null;
   document.querySelectorAll("[data-route-filter]").forEach((filterButton) => {
     filterButton.classList.toggle("is-active", filterButton === button);
   });
+  syncSubcategoryButtons();
+  renderProducts();
   renderRouteProducts();
+});
+
+document.querySelectorAll(".subcategory-list").forEach((list) => {
+  list.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-subcategory]");
+    if (!button) return;
+    selectSubcategory(button, list.id === "route-subcategories");
+  });
 });
 
 document.querySelector("#search-form").addEventListener("submit", (event) => {

@@ -659,6 +659,29 @@ p {
   font-size: 13px;
 }
 
+.subcategory-chip {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  text-underline-offset: 3px;
+}
+
+.subcategory-chip:hover,
+.subcategory-chip:focus-visible {
+  color: var(--green);
+  text-decoration: underline;
+}
+
+.subcategory-chip.is-active {
+  color: var(--green);
+  font-weight: 600;
+}
+
 .subcategory-list strong {
   margin-bottom: 3px;
   color: var(--ink);
