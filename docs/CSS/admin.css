@@ -969,6 +969,43 @@ button {
   font-size: 11px;
 }
 
+.dialog-fields .field-help {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.dialog-fields input[type="file"] {
+  height: auto;
+  padding: 9px;
+}
+
+.product-image-preview {
+  width: 112px;
+  height: 112px;
+  margin-top: 10px;
+  display: block;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  background: #eef0e9;
+}
+
+.product-row-identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.product-image-thumb {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  object-fit: cover;
+  background: #eef0e9;
+}
+
 .dialog-actions {
   display: flex;
   justify-content: flex-end;

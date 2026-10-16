@@ -804,11 +804,23 @@ p {
 
 .product-info h3 {
   min-height: 37px;
-  margin: 0 0 10px;
+  margin: 0 0 5px;
   font-family: var(--serif);
   font-size: 17px;
   line-height: 1.28;
   font-weight: 500;
+}
+
+.product-sku {
+  margin: 0 0 4px;
+  color: #81877f;
+  font-size: 10px;
+}
+
+.product-stock {
+  margin: 0 0 10px;
+  color: #637561;
+  font-size: 10px;
 }
 
 .product-bottom {
@@ -1205,7 +1217,7 @@ p {
 .cart-line {
   padding: 15px 0;
   display: grid;
-  grid-template-columns: 69px 1fr auto;
+  grid-template-columns: 69px minmax(0, 1fr) auto;
   gap: 12px;
   border-bottom: 1px solid var(--line);
 }
@@ -1251,10 +1263,41 @@ p {
 }
 
 .cart-line-price {
-  padding-top: 3px;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.cart-line-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.cart-remove-button {
+  width: 29px;
+  height: 29px;
+  padding: 6px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #e1d5d0;
+  background: transparent;
+  color: #9d5144;
+  cursor: pointer;
+}
+
+.cart-remove-button:hover {
+  background: #f8efec;
+}
+
+.cart-remove-button svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
 }
 
 .cart-empty {

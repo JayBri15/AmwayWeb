@@ -20,7 +20,7 @@ const currencyFormatter = new Intl.NumberFormat(CONFIG.locale, {
 
 /**
  * Modelos del prototipo:
- * - Product: { id, name, sku, category, detail, price, stock }
+ * - Product: { id, name, sku, category, detail, price, stock, image }
  * - Customer: { id, name, email, phone }
  * - Admin: { id, name, email, role, active }
  * - Sale: { id, date, customerId, customerName, paymentMethod, items, total, status }
@@ -31,81 +31,8 @@ const currencyFormatter = new Intl.NumberFormat(CONFIG.locale, {
  * `customerId` y `productId` relacionan los registros vigentes cuando aplica.
  */
 const INITIAL_DATA = {
-  products: [
-    {
-      id: "nutrilite-daily",
-      name: "Nutrilite Daily",
-      sku: "NUT-001",
-      category: "Nutrición",
-      detail: "Vitaminas y suplementos",
-      price: 28.5,
-      stock: 24
-    },
-    {
-      id: "artistry-skin",
-      name: "Artistry Skin Nutrition",
-      sku: "ART-001",
-      category: "Belleza",
-      detail: "Cuidado de la piel",
-      price: 42,
-      stock: 14
-    },
-    {
-      id: "body-series",
-      name: "Geles de baño Body Series",
-      sku: "BODY-001",
-      category: "Cuidado personal",
-      detail: "Baño y cuidado del cuerpo",
-      price: 16.75,
-      stock: 18
-    },
-    {
-      id: "dish-drops",
-      name: "Concentrado Dish Drops",
-      sku: "HOME-001",
-      category: "En casa",
-      detail: "Artículos de limpieza",
-      price: 12.9,
-      stock: 31
-    },
-    {
-      id: "protein",
-      name: "Nutrilite All Plant Protein",
-      sku: "NUT-002",
-      category: "Nutrición",
-      detail: "Nutrición deportiva",
-      price: 35.5,
-      stock: 9
-    },
-    {
-      id: "artistry-lip",
-      name: "Artistry Go Vibrant",
-      sku: "ART-002",
-      category: "Belleza",
-      detail: "Maquillaje",
-      price: 24,
-      stock: 11
-    },
-    {
-      id: "glister",
-      name: "Pasta dental Glister",
-      sku: "CARE-001",
-      category: "Cuidado personal",
-      detail: "Cuidado bucal",
-      price: 9.5,
-      stock: 27
-    },
-    {
-      id: "e-spring",
-      name: "Sistema eSpring",
-      sku: "HOME-002",
-      category: "En casa",
-      detail: "Tratamiento de agua",
-      price: 289,
-      stock: 4
-    }
-  ],
-  categories: ["Nutrición", "Belleza", "Cuidado personal", "En casa"],
+  products: window.amwayProducts.map((product) => ({ ...product })),
+  categories: [...window.amwayCategories],
   customers: [],
   sales: [],
   admins: [{ id: "admin-demo", name: "Administrador demo", email: CONFIG.demoEmail, role: "Administrador", active: true }]
@@ -156,22 +83,34 @@ function isValidData(value) {
   const isRecord = (item) => item !== null && typeof item === "object" && !Array.isArray(item);
   const hasTextFields = (item, fields) =>
     isRecord(item) && fields.every((field) => typeof item[field] === "string");
-
+  const hasUniqueValues = (items, getValue) => {
+    const values = items.map(getValue);
+    return values.every((value, index) =>
+      value && values.indexOf(value) === index
+    );
+  };
   if (!isRecord(value) || !DATA_COLLECTIONS.every((key) => Array.isArray(value[key]))) return false;
 
   const validProducts = value.products.every((product) =>
     hasTextFields(product, ["id", "name", "sku", "category", "detail"]) &&
+    (!("image" in product) || window.isValidAmwayImageSource(product.image)) &&
     value.categories.includes(product.category) &&
     Number.isFinite(product.price) && product.price > 0 &&
     Number.isInteger(product.stock) && product.stock >= 0
-  );
-  const validCategories = value.categories.every((category) => typeof category === "string");
+  ) &&
+    hasUniqueValues(value.products, (product) => product.id) &&
+    hasUniqueValues(value.products, (product) => product.sku.toLocaleLowerCase(CONFIG.locale));
+  const validCategories = value.categories.every((category) =>
+    typeof category === "string" && category.trim().length > 0
+  ) && hasUniqueValues(value.categories, (category) => category.toLocaleLowerCase(CONFIG.locale));
   const validCustomers = value.customers.every((customer) =>
     hasTextFields(customer, ["id", "name", "email", "phone"])
-  );
+  ) && hasUniqueValues(value.customers, (customer) => customer.id);
   const validAdmins = value.admins.every((admin) =>
     hasTextFields(admin, ["id", "name", "email", "role"]) && typeof admin.active === "boolean"
-  );
+  ) &&
+    hasUniqueValues(value.admins, (admin) => admin.id) &&
+    hasUniqueValues(value.admins, (admin) => admin.email.toLocaleLowerCase(CONFIG.locale));
   const validSales = value.sales.every((sale) =>
     hasTextFields(sale, ["id", "date", "customerName", "paymentMethod", "status"]) &&
     (sale.customerId === null || typeof sale.customerId === "string") &&
@@ -184,7 +123,7 @@ function isValidData(value) {
       Number.isFinite(item.unitPrice) && item.unitPrice >= 0 &&
       Number.isInteger(item.quantity) && item.quantity > 0
     )
-  );
+  ) && hasUniqueValues(value.sales, (sale) => sale.id);
 
   return validProducts && validCategories && validCustomers && validAdmins && validSales;
 }
@@ -362,6 +301,21 @@ function actionGroup(...buttons) {
   return group;
 }
 
+function productIdentity(product) {
+  const identity = element("div", "product-row-identity");
+  const imageSource = product.image ||
+    window.amwayProducts.find((item) => item.id === product.id)?.image;
+  if (imageSource) {
+    const image = element("img", "product-image-thumb");
+    image.src = imageSource;
+    image.alt = "";
+    image.loading = "lazy";
+    identity.append(image);
+  }
+  identity.append(element("strong", "", product.name));
+  return identity;
+}
+
 // Renderizadores de páginas
 function renderDashboard() {
   const today = new Date().toDateString();
@@ -434,7 +388,7 @@ function renderProducts() {
     makeToolbar(`${data.products.length} productos registrados`, null, "Buscar por nombre, SKU o categoría")
   );
   const rows = data.products.map((product) => makeRow([
-    element("strong", "", product.name),
+    productIdentity(product),
     product.sku,
     product.category,
     money(product.price),
@@ -681,6 +635,7 @@ function openForm(title, fields, onSave) {
       field.options.forEach((option) => input.append(new Option(option, option)));
     } else {
       input.type = field.type || "text";
+      if (field.accept) input.accept = field.accept;
       if (field.step) input.step = field.step;
       if (field.min !== undefined) input.min = String(field.min);
       if (field.maxLength) input.maxLength = field.maxLength;
@@ -690,15 +645,25 @@ function openForm(title, fields, onSave) {
     if (field.value !== undefined) input.value = String(field.value);
     label.htmlFor = input.id;
     wrapper.append(label, input);
+    if (field.help) wrapper.append(element("small", "field-help", field.help));
     dialogFields.append(wrapper);
   });
-  entityForm.onsubmit = (event) => {
+  entityForm.onsubmit = async (event) => {
     event.preventDefault();
     const formData = new FormData(entityForm);
-    const result = onSave(formData);
-    if (result === false) return;
-    dialog.close();
-    render();
+    const submitButton = entityForm.querySelector('[type="submit"]');
+    submitButton.disabled = true;
+    try {
+      const result = await onSave(formData);
+      if (result === false) return;
+      dialog.close();
+      render();
+    } catch (error) {
+      console.error("No se pudo completar el formulario.", error);
+      showFormError("No se pudo procesar la imagen seleccionada. Prueba con otro archivo.");
+    } finally {
+      submitButton.disabled = false;
+    }
   };
   dialog.showModal();
 }
@@ -709,16 +674,37 @@ function openProductForm(product = null) {
     return;
   }
   const editing = Boolean(product);
+  const defaultImage = window.amwayProducts.find((item) => item.id === product?.id)?.image || "";
+  const currentImage = product?.image || defaultImage;
+  const currentImageUrl = currentImage.startsWith("http") ? currentImage : "";
+  let uploadedImage = "";
   openForm(editing ? "Editar producto" : "Nuevo producto", [
     { name: "name", label: "Nombre del producto", value: product?.name, required: true, full: true, maxLength: 100 },
     { name: "sku", label: "SKU", value: product?.sku, required: true, maxLength: 30 },
     { name: "category", label: "Categoría", type: "select", value: product?.category || data.categories[0], options: data.categories },
     { name: "detail", label: "Descripción breve", value: product?.detail || "", full: true, maxLength: 120 },
+    {
+      name: "image",
+      label: "URL de la imagen del producto",
+      type: "url",
+      value: currentImageUrl,
+      full: true
+    },
+    {
+      name: "imageFile",
+      label: "O subir un archivo de imagen (máximo 2 MB)",
+      type: "file",
+      accept: "image/png,image/jpeg,image/webp,image/gif",
+      help: "Si seleccionas un archivo, se usará en lugar de la URL.",
+      full: true
+    },
     { name: "price", label: "Precio (USD)", type: "number", value: product?.price ?? "", required: true, min: 0.01, step: "0.01" },
     { name: "stock", label: "Existencias", type: "number", value: product?.stock ?? 0, required: true, min: 0, step: "1" }
-  ], (form) => {
+  ], async (form) => {
     const name = String(form.get("name")).trim();
     const sku = String(form.get("sku")).trim();
+    const imageUrl = String(form.get("image")).trim();
+    const imageFile = form.get("imageFile");
     const price = Number(form.get("price"));
     const stock = Number(form.get("stock"));
     if (!name || !sku || !Number.isFinite(price) || price <= 0 || !Number.isInteger(stock) || stock < 0) {
@@ -729,12 +715,43 @@ function openProductForm(product = null) {
       showFormError("Ya existe un producto con ese SKU.");
       return false;
     }
+    let image = currentImage;
+    if (imageFile instanceof File && imageFile.size > 0) {
+      const supportedTypes = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+      if (!supportedTypes.includes(imageFile.type)) {
+        showFormError("El archivo debe ser PNG, JPG, WebP o GIF.");
+        return false;
+      }
+      if (imageFile.size > 2 * 1024 * 1024) {
+        showFormError("La imagen no puede superar los 2 MB.");
+        return false;
+      }
+      image = uploadedImage || await readImageFile(imageFile);
+    } else if (imageUrl) {
+      let parsedImageUrl;
+      try {
+        parsedImageUrl = new URL(imageUrl);
+      } catch {
+        showFormError("Ingresa una URL válida para la imagen del producto.");
+        return false;
+      }
+      if (!["http:", "https:"].includes(parsedImageUrl.protocol)) {
+        showFormError("La imagen debe usar una URL segura http o https.");
+        return false;
+      }
+      image = parsedImageUrl.href;
+    }
+    if (!image) {
+      showFormError("Ingresa una URL o selecciona un archivo de imagen.");
+      return false;
+    }
     if (product) {
       Object.assign(product, {
         name,
         sku,
         category: String(form.get("category")),
         detail: String(form.get("detail")).trim(),
+        image,
         price,
         stock
       });
@@ -745,11 +762,70 @@ function openProductForm(product = null) {
         sku,
         category: String(form.get("category")),
         detail: String(form.get("detail")).trim(),
+        image,
         price,
         stock
       });
     }
     if (!saveData()) return false;
+  });
+
+  const imageFileInput = document.querySelector("#form-imageFile");
+  const imagePreview = element("img", "product-image-preview");
+  imagePreview.alt = "Vista previa de la imagen del producto";
+  imagePreview.hidden = !currentImage;
+  if (currentImage) imagePreview.src = currentImage;
+  imageFileInput.insertAdjacentElement("afterend", imagePreview);
+  imageFileInput.addEventListener("change", async () => {
+    const file = imageFileInput.files[0];
+    uploadedImage = "";
+    if (!file) {
+      imagePreview.hidden = !currentImage;
+      if (currentImage) imagePreview.src = currentImage;
+      return;
+    }
+    if (!["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type)) {
+      showFormError("El archivo debe ser PNG, JPG, WebP o GIF.");
+      imageFileInput.value = "";
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      showFormError("La imagen no puede superar los 2 MB.");
+      imageFileInput.value = "";
+      return;
+    }
+
+    const submitButton = entityForm.querySelector('[type="submit"]');
+    submitButton.disabled = true;
+    try {
+      uploadedImage = await readImageFile(file);
+      imagePreview.src = uploadedImage;
+      imagePreview.hidden = false;
+      formError.hidden = true;
+    } catch (error) {
+      console.error("No se pudo leer el archivo de imagen.", error);
+      showFormError("No se pudo leer el archivo de imagen. Prueba con otro archivo.");
+      imageFileInput.value = "";
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
+}
+
+function readImageFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      if (typeof reader.result !== "string") {
+        reject(new TypeError("El archivo de imagen no produjo un resultado válido."));
+        return;
+      }
+      resolve(reader.result);
+    }, { once: true });
+    reader.addEventListener("error", () => {
+      reject(reader.error || new Error("No se pudo leer el archivo de imagen."));
+    }, { once: true });
+    reader.readAsDataURL(file);
   });
 }
 

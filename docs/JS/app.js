@@ -1,91 +1,24 @@
-// Datos estáticos que alimentan el catálogo y el carrito.
-const products = [
-  {
-    id: "nutrilite-daily",
-    name: "Nutrilite Daily",
-    category: "Nutrición",
-    detail: "Vitaminas y suplementos",
-    price: 28.5,
-    badge: "Favorito",
-    image: "https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?auto=format&fit=crop&w=700&q=80"
-  },
-  {
-    id: "artistry-skin",
-    name: "Artistry Skin Nutrition",
-    category: "Belleza",
-    detail: "Cuidado de la piel",
-    price: 42,
-    badge: "Nuevo",
-    image: "https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=700&q=80"
-  },
-  {
-    id: "body-series",
-    name: "Geles de baño Body Series",
-    category: "Cuidado personal",
-    detail: "Baño y cuidado del cuerpo",
-    price: 16.75,
-    badge: "Esencial",
-    image: "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?auto=format&fit=crop&w=700&q=80"
-  },
-  {
-    id: "dish-drops",
-    name: "Concentrado Dish Drops",
-    category: "En casa",
-    detail: "Artículos de limpieza",
-    price: 12.9,
-    badge: "Concentrado",
-    image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=700&q=80"
-  },
-  {
-    id: "protein",
-    name: "Nutrilite All Plant Protein",
-    category: "Nutrición",
-    detail: "Nutrición deportiva",
-    price: 35.5,
-    badge: "Nuevo",
-    image: "https://images.unsplash.com/photo-1593095948071-474c5cc2989d?auto=format&fit=crop&w=700&q=80"
-  },
-  {
-    id: "artistry-lip",
-    name: "Artistry Go Vibrant",
-    category: "Belleza",
-    detail: "Maquillaje",
-    price: 24,
-    badge: "Color nuevo",
-    image: "https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=700&q=80"
-  },
-  {
-    id: "glister",
-    name: "Pasta dental Glister",
-    category: "Cuidado personal",
-    detail: "Cuidado bucal",
-    price: 9.5,
-    badge: "Diario",
-    image: "https://images.unsplash.com/photo-1609840114035-3c981b782dfe?auto=format&fit=crop&w=700&q=80"
-  },
-  {
-    id: "e-spring",
-    name: "Sistema eSpring",
-    category: "En casa",
-    detail: "Tratamiento de agua",
-    price: 289,
-    badge: "Hogar",
-    image: "https://images.unsplash.com/photo-1548839140-29a749e1cf4d?auto=format&fit=crop&w=700&q=80"
-  }
-];
-
 // Referencias y estado compartido de la tienda.
+let products = window.amwayProducts;
+let categories = window.amwayCategories;
 const productGrid = document.querySelector("#product-grid");
 const routeProductGrid = document.querySelector("#route-product-grid");
 const searchInput = document.querySelector("#site-search");
 const searchSuggestions = document.querySelector("#search-suggestions");
 const cartKey = "amway-demo-cart-v1";
-const categoryRoutes = [
-  { hash: "#categoria-nutricion", category: "Nutrición", tileId: "categoria-nutricion" },
-  { hash: "#categoria-belleza", category: "Belleza", tileId: "categoria-belleza" },
-  { hash: "#categoria-cuidado", category: "Cuidado personal", tileId: "categoria-cuidado" },
-  { hash: "#categoria-hogar", category: "En casa", tileId: "categoria-hogar" }
+const legacyCategoryRoutes = {
+  "Nutrición": "#categoria-nutricion",
+  "Belleza": "#categoria-belleza",
+  "Cuidado personal": "#categoria-cuidado",
+  "En casa": "#categoria-hogar"
+};
+const categoryTileStyles = [
+  { tile: "nutrition-tile", art: "art-nutrition", symbol: "❋" },
+  { tile: "beauty-tile", art: "art-beauty", symbol: "⟡" },
+  { tile: "care-tile", art: "art-care", symbol: "✺" },
+  { tile: "home-tile", art: "art-home", symbol: "⌂" }
 ];
+let categoryRoutes = [];
 let activeCategory = "Todos";
 let routeFilter = "Todos";
 let currentRouteCategory = null;
@@ -96,20 +29,11 @@ let activeSuggestionIndex = -1;
 let preserveSearchOnRoute = false;
 let cart = loadCart();
 
-// Recupera el carrito guardado y descarta datos inválidos o productos inexistentes.
+// Recupera el carrito y armoniza cantidades con el catálogo compartido actual.
 function loadCart() {
   try {
     const savedCart = JSON.parse(localStorage.getItem(cartKey) || "[]");
-    return Array.isArray(savedCart)
-      ? savedCart.filter((item) =>
-          item !== null &&
-          typeof item === "object" &&
-          typeof item.id === "string" &&
-          products.some((product) => product.id === item.id) &&
-          Number.isInteger(item.quantity) &&
-          item.quantity > 0
-        )
-      : [];
+    return window.normalizeAmwayCart(savedCart);
   } catch (error) {
     console.error("No se pudo recuperar el carrito guardado.", error);
     return [];
@@ -131,6 +55,119 @@ function money(value) {
     style: "currency",
     currency: "USD"
   }).format(value);
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+  })[character]);
+}
+
+function categoryRouteHash(category) {
+  return legacyCategoryRoutes[category] || `#categoria-${encodeURIComponent(category)}`;
+}
+
+function renderCategoryControls() {
+  categoryRoutes = categories.map((category) => ({
+    hash: categoryRouteHash(category),
+    category
+  }));
+
+  const categoryNav = document.querySelector("#category-nav");
+  const allProductsLink = categoryNav.querySelector(".all-products-link");
+  categoryNav.querySelectorAll("[data-category-link]").forEach((link) => link.remove());
+  categories.forEach((category) => {
+    const link = document.createElement("a");
+    link.href = categoryRouteHash(category);
+    link.dataset.categoryLink = category;
+    link.textContent = category;
+    categoryNav.insertBefore(link, allProductsLink);
+  });
+
+  const categoryGrid = document.querySelector("#category-grid");
+  categoryGrid.replaceChildren();
+  categories.forEach((category, index) => {
+    const style = categoryTileStyles[index % categoryTileStyles.length];
+    const categoryProducts = products.filter((product) => product.category === category);
+    const description = [...new Set(categoryProducts.map((product) => product.detail).filter(Boolean))]
+      .slice(0, 2)
+      .join(" · ") || "Explora nuestra selección";
+    const tile = document.createElement("a");
+    tile.className = `category-tile ${style.tile}`;
+    tile.href = categoryRouteHash(category);
+    tile.dataset.category = category;
+    const number = document.createElement("span");
+    number.className = "tile-number";
+    number.textContent = String(index + 1).padStart(2, "0");
+    const art = document.createElement("span");
+    art.className = `tile-art ${style.art}`;
+    art.setAttribute("aria-hidden", "true");
+    art.textContent = style.symbol;
+    const content = document.createElement("span");
+    content.className = "tile-content";
+    content.append(
+      Object.assign(document.createElement("strong"), { textContent: category }),
+      Object.assign(document.createElement("small"), { textContent: description })
+    );
+    const arrow = document.createElement("span");
+    arrow.className = "tile-arrow";
+    arrow.textContent = "→";
+    tile.append(number, art, content, arrow);
+    categoryGrid.append(tile);
+  });
+
+  const subcategoryList = document.querySelector("#subcategory-list");
+  subcategoryList.replaceChildren();
+  categories.forEach((category) => {
+    const details = [...new Set(
+      products
+        .filter((product) => product.category === category && product.detail)
+        .map((product) => product.detail)
+    )];
+    if (!details.length) return;
+
+    const group = document.createElement("div");
+    group.dataset.category = category;
+    const heading = document.createElement("strong");
+    heading.textContent = category;
+    group.append(heading);
+    details.forEach((detail) => {
+      const button = document.createElement("button");
+      button.className = "subcategory-chip";
+      button.type = "button";
+      button.dataset.subcategory = detail;
+      button.setAttribute("aria-pressed", "false");
+      button.textContent = detail;
+      group.append(button);
+    });
+    subcategoryList.append(group);
+  });
+
+  ["#filter-row", "#route-filter-row"].forEach((selector) => {
+    const row = document.querySelector(selector);
+    const isRouteRow = selector === "#route-filter-row";
+    const attribute = isRouteRow ? "data-route-filter" : "data-filter";
+    row.querySelectorAll(`[${attribute}]`).forEach((button) => {
+      if (button.dataset[isRouteRow ? "routeFilter" : "filter"] !== "Todos") button.remove();
+    });
+    const count = row.querySelector(".result-count");
+    categories.forEach((category) => {
+      const button = document.createElement("button");
+      button.className = "filter-chip";
+      button.dataset[isRouteRow ? "routeFilter" : "filter"] = category;
+      button.textContent = category;
+      button.classList.toggle(
+        "is-active",
+        (isRouteRow ? routeFilter : activeCategory) === category
+      );
+      row.insertBefore(button, count);
+    });
+  });
+  document.querySelector(".category-section").hidden = categories.length === 0;
 }
 
 // Filtra los productos por categoría y texto de búsqueda.
@@ -264,30 +301,43 @@ function setActiveSearchSuggestion(index) {
 // Genera el marcado de una lista de productos.
 function productCardsMarkup(visibleProducts) {
   return visibleProducts
-    .map((product, index) => `
+    .map((product, index) => {
+      const outOfStock = product.stock <= 0;
+      const badge = outOfStock
+        ? "Agotado"
+        : product.stock <= 5
+          ? "Pocas unidades"
+          : product.badge;
+      return `
       <article class="product-card" style="animation-delay:${index * 45}ms">
         <div class="product-image">
           <img
-            src="${product.image}"
-            alt="${product.name}"
+            src="${escapeHtml(product.image)}"
+            alt="${escapeHtml(product.name)}"
             loading="lazy"
           >
-          <span class="product-badge">${product.badge}</span>
+          <span class="product-badge">${escapeHtml(badge)}</span>
         </div>
         <div class="product-info">
-          <p class="product-category">${product.category} · ${product.detail}</p>
-          <h3>${product.name}</h3>
+          <p class="product-category">${escapeHtml(product.category)} · ${escapeHtml(product.detail)}</p>
+          <h3>${escapeHtml(product.name)}</h3>
+          <p class="product-sku">SKU: ${escapeHtml(product.sku)}</p>
+          <p class="product-stock">${
+            outOfStock ? "Agotado" : `${product.stock} unidades disponibles`
+          }</p>
           <div class="product-bottom">
             <span class="product-price">${money(product.price)}</span>
             <button
               class="add-to-cart"
-              data-add="${product.id}"
-              aria-label="Agregar ${product.name} al carrito"
+              data-add="${escapeHtml(product.id)}"
+              aria-label="${outOfStock ? "Producto agotado" : `Agregar ${escapeHtml(product.name)} al carrito`}"
+              ${outOfStock ? "disabled" : ""}
             >+</button>
           </div>
         </div>
       </article>
-    `)
+    `;
+    })
     .join("");
 }
 
@@ -386,32 +436,50 @@ function renderCart() {
   document.querySelector("#cart-empty").hidden = items.length > 0;
   document.querySelector("#drawer-footer").hidden = items.length === 0;
   document.querySelector("#cart-items").innerHTML = items
-    .map((product) => `
+    .map((product) => {
+      const safeId = escapeHtml(product.id);
+      const safeName = escapeHtml(product.name);
+      return `
       <article class="cart-line">
-        <img src="${product.image}" alt="" loading="lazy">
+        <img src="${escapeHtml(product.image)}" alt="" loading="lazy">
         <div>
-          <h3>${product.name}</h3>
+          <h3>${safeName}</h3>
           <p>${money(product.price)} c/u</p>
           <div
             class="quantity-controls"
-            aria-label="Cantidad de ${product.name}"
+            aria-label="Cantidad de ${safeName}"
           >
             <button
-              data-quantity="${product.id}"
+              data-quantity="${safeId}"
               data-change="-1"
               aria-label="Quitar uno"
             >−</button>
             <span>${product.quantity}</span>
             <button
-              data-quantity="${product.id}"
+              data-quantity="${safeId}"
               data-change="1"
+              ${product.quantity >= product.stock ? "disabled" : ""}
               aria-label="Agregar uno"
             >+</button>
           </div>
         </div>
-        <span class="cart-line-price">${money(product.price * product.quantity)}</span>
+        <div class="cart-line-actions">
+          <span class="cart-line-price">${money(product.price * product.quantity)}</span>
+          <button
+            class="cart-remove-button"
+            type="button"
+            data-remove-from-cart="${safeId}"
+            aria-label="Eliminar ${safeName} del carrito"
+            title="Eliminar producto"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M4 7h16M10 11v6m4-6v6M6 7l1 14h10l1-14M9 7V4h6v3"></path>
+            </svg>
+          </button>
+        </div>
       </article>
-    `)
+    `;
+    })
     .join("");
 
   document.querySelector("#cart-subtotal").textContent = money(
@@ -421,9 +489,13 @@ function renderCart() {
 
 // Añade una unidad del producto indicado y actualiza almacenamiento e interfaz.
 function addToCart(productId) {
+  const product = products.find((entry) => entry.id === productId);
+  if (!product || product.stock <= 0) return;
+
   const item = cart.find((entry) => entry.id === productId);
 
   if (item) {
+    if (item.quantity >= product.stock) return;
     item.quantity += 1;
   } else {
     cart.push({ id: productId, quantity: 1 });
@@ -488,16 +560,19 @@ function updateRoute() {
       }
       activeCategory = selectedCategory.category;
       routeEyebrow.textContent = document.querySelector(".category-section .eyebrow").textContent;
-      routeTitle.textContent = document.querySelector(
-        `#${selectedCategory.tileId} .tile-content strong`
-      ).textContent;
+      routeTitle.textContent = selectedCategory.category;
 
       const matchingSubcategory = [...document.querySelectorAll(".subcategory-list > div")]
         .find((subcategory) =>
           subcategory.querySelector("strong").textContent === selectedCategory.category
         );
-      routeSubcategories.replaceChildren(matchingSubcategory.cloneNode(true));
-      routeSubcategories.hidden = false;
+      if (matchingSubcategory) {
+        routeSubcategories.replaceChildren(matchingSubcategory.cloneNode(true));
+        routeSubcategories.hidden = false;
+      } else {
+        routeSubcategories.replaceChildren();
+        routeSubcategories.hidden = true;
+      }
       routeFilterRow.hidden = true;
     } else {
       currentRouteCategory = null;
@@ -656,11 +731,23 @@ productGrid.addEventListener("click", handleProductGridClick);
 routeProductGrid.addEventListener("click", handleProductGridClick);
 
 document.querySelector("#cart-items").addEventListener("click", (event) => {
+  const removeButton = event.target.closest("[data-remove-from-cart]");
+  if (removeButton) {
+    cart = cart.filter((entry) => entry.id !== removeButton.dataset.removeFromCart);
+    saveCart();
+    renderCart();
+    return;
+  }
+
   const button = event.target.closest("[data-quantity]");
   if (!button) return;
 
   const item = cart.find((entry) => entry.id === button.dataset.quantity);
   if (!item) return;
+
+  const product = products.find((entry) => entry.id === item.id);
+  if (!product) return;
+  if (Number(button.dataset.change) > 0 && item.quantity >= product.stock) return;
 
   item.quantity += Number(button.dataset.change);
   cart = cart.filter((entry) => entry.quantity > 0);
@@ -733,14 +820,52 @@ document.querySelector("#account-form").addEventListener("submit", (event) => {
   message.classList.toggle("is-success", emailValid && passwordValid && confirmationValid);
 });
 
-// El proceso de compra solicita autenticación y cierra el panel del carrito.
+// Redirige al checkout independiente conservando el carrito guardado.
 document.querySelector("#checkout-button").addEventListener("click", () => {
-  window.location.hash = "#iniciar-sesion";
+  if (cart.length === 0) return;
+
   closeCart();
+  window.location.href = "Checkout.html";
 });
 
 // Mantiene la vista alineada con la ruta y dibuja el estado inicial de la tienda.
 window.addEventListener("hashchange", updateRoute);
+window.addEventListener("storage", (event) => {
+  if (event.key === cartKey) {
+    cart = loadCart();
+    renderCart();
+    return;
+  }
+  if (event.key !== "amway-admin-demo-data-v1" && event.key !== null) return;
+
+  window.refreshAmwayCatalog();
+  products = window.amwayProducts;
+  categories = window.amwayCategories;
+  categoryRoutes = [];
+  if (activeCategory !== "Todos" && !categories.includes(activeCategory)) {
+    activeCategory = "Todos";
+  }
+  if (routeFilter !== "Todos" && !categories.includes(routeFilter)) {
+    routeFilter = "Todos";
+  }
+  if (
+    activeSubcategory &&
+    !products.some((product) =>
+      product.category === activeSubcategory.category &&
+      product.detail === activeSubcategory.name
+    )
+  ) {
+    activeSubcategory = null;
+  }
+  cart = loadCart();
+  saveCart();
+  renderCategoryControls();
+  renderProducts();
+  renderRouteProducts();
+  renderCart();
+  updateRoute();
+});
+renderCategoryControls();
 renderProducts();
 renderCart();
 updateRoute();

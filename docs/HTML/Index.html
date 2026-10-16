@@ -16,6 +16,7 @@
     rel="stylesheet"
   >
   <link rel="stylesheet" href="../CSS/styles.css">
+  <script src="../JS/products.js" defer></script>
   <script src="../JS/app.js" defer></script>
 </head>
 <body>
@@ -66,11 +67,7 @@
     </header>
 
     <!-- Accesos rápidos a las categorías del catálogo. -->
-    <nav class="category-nav" aria-label="Categorías principales">
-      <a href="#categoria-nutricion">Nutrición</a>
-      <a href="#categoria-belleza">Belleza</a>
-      <a href="#categoria-cuidado">Cuidado personal</a>
-      <a href="#categoria-hogar">En casa</a>
+    <nav class="category-nav" id="category-nav" aria-label="Categorías principales">
       <a href="#todos-productos" class="all-products-link">Ver todo <span aria-hidden="true">→</span></a>
     </nav>
   </div>
@@ -123,73 +120,8 @@
           Ver todos los productos <span aria-hidden="true">→</span>
         </a>
       </div>
-      <div class="category-grid">
-        <a class="category-tile nutrition-tile" id="categoria-nutricion" href="#categoria-nutricion" data-category="Nutrición">
-          <span class="tile-number">01</span>
-          <span class="tile-art art-nutrition" aria-hidden="true">❋</span>
-          <span class="tile-content">
-            <strong>Nutrición</strong>
-            <small>Vitaminas, energías y más</small>
-          </span>
-          <span class="tile-arrow">→</span>
-        </a>
-        <a class="category-tile beauty-tile" id="categoria-belleza" href="#categoria-belleza" data-category="Belleza">
-          <span class="tile-number">02</span>
-          <span class="tile-art art-beauty" aria-hidden="true">⟡</span>
-          <span class="tile-content">
-            <strong>Belleza</strong>
-            <small>Rituales para brillar</small>
-          </span>
-          <span class="tile-arrow">→</span>
-        </a>
-        <a class="category-tile care-tile" id="categoria-cuidado" href="#categoria-cuidado" data-category="Cuidado personal">
-          <span class="tile-number">03</span>
-          <span class="tile-art art-care" aria-hidden="true">✺</span>
-          <span class="tile-content">
-            <strong>Cuidado personal</strong>
-            <small>Esenciales para cada día</small>
-          </span>
-          <span class="tile-arrow">→</span>
-        </a>
-        <a class="category-tile home-tile" id="categoria-hogar" href="#categoria-hogar" data-category="En casa">
-          <span class="tile-number">04</span>
-          <span class="tile-art art-home" aria-hidden="true">⌂</span>
-          <span class="tile-content">
-            <strong>En casa</strong>
-            <small>Un espacio para disfrutar</small>
-          </span>
-          <span class="tile-arrow">→</span>
-        </a>
-      </div>
-      <div class="subcategory-list" aria-label="Subcategorías">
-        <div data-category="Nutrición">
-          <strong>Nutrición</strong>
-          <button class="subcategory-chip" type="button" data-subcategory="Vitaminas y Suplementos" aria-pressed="false">Vitaminas y Suplementos</button>
-          <button class="subcategory-chip" type="button" data-subcategory="Control de peso" aria-pressed="false">Control de peso</button>
-          <button class="subcategory-chip" type="button" data-subcategory="Nutrición deportiva" aria-pressed="false">Nutrición deportiva</button>
-          <button class="subcategory-chip" type="button" data-subcategory="Bebidas de energía" aria-pressed="false">Bebidas de energía</button>
-        </div>
-        <div data-category="Belleza">
-          <strong>Belleza</strong>
-          <button class="subcategory-chip" type="button" data-subcategory="Cuidado de la piel" aria-pressed="false">Cuidado de la piel</button>
-          <button class="subcategory-chip" type="button" data-subcategory="Maquillaje" aria-pressed="false">Maquillaje</button>
-          <button class="subcategory-chip" type="button" data-subcategory="Fragancia" aria-pressed="false">Fragancia</button>
-          <button class="subcategory-chip" type="button" data-subcategory="Belleza Virtual Artistry" aria-pressed="false">Belleza Virtual Artistry</button>
-        </div>
-        <div data-category="Cuidado personal">
-          <strong>Cuidado personal</strong>
-          <button class="subcategory-chip" type="button" data-subcategory="Baño y Cuidado del cuerpo" aria-pressed="false">Baño y Cuidado del cuerpo</button>
-          <button class="subcategory-chip" type="button" data-subcategory="Cuidado del cabello" aria-pressed="false">Cuidado del cabello</button>
-          <button class="subcategory-chip" type="button" data-subcategory="Cuidado bucal" aria-pressed="false">Cuidado bucal</button>
-        </div>
-        <div data-category="En casa">
-          <strong>En casa</strong>
-          <button class="subcategory-chip" type="button" data-subcategory="Artículos de limpieza" aria-pressed="false">Artículos de limpieza</button>
-          <button class="subcategory-chip" type="button" data-subcategory="Utensilios de cocina" aria-pressed="false">Utensilios de cocina</button>
-          <button class="subcategory-chip" type="button" data-subcategory="Lavandería" aria-pressed="false">Lavandería</button>
-          <button class="subcategory-chip" type="button" data-subcategory="Tratamiento de agua" aria-pressed="false">Tratamiento de agua</button>
-        </div>
-      </div>
+      <div class="category-grid" id="category-grid"></div>
+      <div class="subcategory-list" id="subcategory-list" aria-label="Subcategorías"></div>
     </section>
 
     <!-- Catálogo interactivo: filtros, resultados y productos. -->
@@ -207,18 +139,6 @@
         <div class="filter-row" id="filter-row" aria-label="Filtrar productos">
           <button class="filter-chip is-active" data-filter="Todos">
             Todos
-          </button>
-          <button class="filter-chip" data-filter="Nutrición">
-            Nutrición
-          </button>
-          <button class="filter-chip" data-filter="Belleza">
-            Belleza
-          </button>
-          <button class="filter-chip" data-filter="Cuidado personal">
-            Cuidado personal
-          </button>
-          <button class="filter-chip" data-filter="En casa">
-            En casa
           </button>
           <span class="result-count" id="result-count" aria-live="polite"></span>
         </div>
@@ -256,10 +176,6 @@
       <div class="subcategory-list route-subcategories" id="route-subcategories" hidden></div>
       <div class="filter-row" id="route-filter-row" aria-label="Filtrar productos" hidden>
         <button class="filter-chip is-active" data-route-filter="Todos">Todos</button>
-        <button class="filter-chip" data-route-filter="Nutrición">Nutrición</button>
-        <button class="filter-chip" data-route-filter="Belleza">Belleza</button>
-        <button class="filter-chip" data-route-filter="Cuidado personal">Cuidado personal</button>
-        <button class="filter-chip" data-route-filter="En casa">En casa</button>
         <span class="result-count" id="route-result-count" aria-live="polite"></span>
       </div>
       <div class="product-grid" id="route-product-grid"></div>
@@ -356,7 +272,7 @@
     </section>
   </main>
 
-  <!-- Pie de pÃ¡gina comÃºn a las vistas. -->
+  <!-- Pie de página común a las vistas. -->
   <footer class="site-footer">
     <a class="wordmark footer-wordmark" href="#inicio">amway<span>.</span></a>
     <p>Bienestar para cada día, en cada etapa de tu vida.</p>
