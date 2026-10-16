@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f6f5ef">
+    <meta
+      name="description"
+      content="Revisa tu compra, ingresa la dirección de entrega y selecciona un método de pago."
+    >
+    <title>Finalizar compra | Amway</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="../CSS/styles.css">
+    <link rel="stylesheet" href="../CSS/checkout.css">
+    <script src="../JS/products.js" defer></script>
+    <script src="../JS/checkout.js" defer></script>
+  </head>
+  <body>
+    <div class="announcement">Bienestar que se siente. Calidad en la que puedes confiar.</div>
+    <header class="checkout-header">
+      <a class="wordmark" href="Index.html#inicio" aria-label="Amway, volver a la tienda">
+        amway<span>.</span>
+      </a>
+      <span class="checkout-header-label">Compra segura · Prototipo</span>
+    </header>
+
+    <main class="checkout-page">
+      <div class="checkout-wrap">
+        <a class="back-link" href="Index.html#inicio">← Volver a la tienda</a>
+        <header class="checkout-heading">
+          <p class="eyebrow">FINALIZA TU COMPRA</p>
+          <h1 id="checkout-title" tabindex="-1">Revisa tu selección</h1>
+          <p id="checkout-intro">
+            Confirma tus artículos y el resumen de cobro antes de ingresar tus datos de entrega.
+          </p>
+        </header>
+
+        <ol class="checkout-progress" aria-label="Pasos de compra">
+          <li class="is-active" data-checkout-progress="review" aria-current="step">
+            <span>1</span> Resumen
+          </li>
+          <li data-checkout-progress="address"><span>2</span> Dirección</li>
+          <li data-checkout-progress="payment"><span>3</span> Pago</li>
+        </ol>
+
+        <section class="checkout-step" id="checkout-review" aria-labelledby="checkout-title">
+          <div class="checkout-review-grid" id="checkout-review-content">
+            <section class="checkout-card" aria-labelledby="checkout-items-title">
+              <h2 id="checkout-items-title">Resumen de artículos</h2>
+              <div class="checkout-items" id="checkout-items"></div>
+              <p class="checkout-cart-message" id="checkout-cart-message" role="alert" hidden></p>
+            </section>
+
+            <section class="checkout-card" aria-labelledby="checkout-charge-title">
+              <h2 id="checkout-charge-title">Resumen de cobro</h2>
+              <dl class="charge-lines">
+                <div>
+                  <dt>Subtotal de artículos</dt>
+                  <dd id="checkout-subtotal">$0.00</dd>
+                </div>
+                <div><dt>Envío</dt><dd>Por calcular</dd></div>
+                <div><dt>Impuestos</dt><dd>Por calcular</dd></div>
+              </dl>
+              <div class="charge-total">
+                <span>Total de artículos</span>
+                <strong id="checkout-total">$0.00</strong>
+              </div>
+              <p class="checkout-note">
+                El total final se confirmará con la dirección de entrega y los cargos aplicables.
+              </p>
+            </section>
+          </div>
+
+          <div class="checkout-empty" id="checkout-empty" hidden>
+            <p>Tu carrito está vacío. Agrega productos antes de continuar.</p>
+            <a class="button button-dark" href="Index.html#todos-productos">Explorar productos</a>
+          </div>
+
+          <div class="checkout-confirm-area" id="checkout-confirm-area">
+            <label class="checkout-confirm" for="checkout-confirmation">
+              <input id="checkout-confirmation" type="checkbox">
+              <span>Confirmo que revisé los artículos y el resumen de cobro.</span>
+            </label>
+            <button
+              class="button button-dark checkout-next"
+              id="checkout-continue"
+              type="button"
+              disabled
+            >
+              Continuar con dirección y pago <span aria-hidden="true">→</span>
+            </button>
+          </div>
+        </section>
+
+        <section
+          class="checkout-step"
+          id="checkout-address"
+          aria-labelledby="checkout-title"
+          hidden
+        >
+          <div class="checkout-details-grid">
+            <form class="checkout-card checkout-form" id="address-form">
+              <h2>Dirección de entrega</h2>
+              <div class="checkout-field-grid">
+                <div class="checkout-field checkout-field-full">
+                  <label for="delivery-name">Nombre completo</label>
+                  <input id="delivery-name" name="name" autocomplete="name" required>
+                </div>
+                <div class="checkout-field checkout-field-full">
+                  <label for="delivery-street">Dirección</label>
+                  <input
+                    id="delivery-street"
+                    name="street"
+                    autocomplete="street-address"
+                    placeholder="Calle y número"
+                    required
+                  >
+                </div>
+                <div class="checkout-field">
+                  <label for="delivery-city">Ciudad</label>
+                  <input id="delivery-city" name="city" autocomplete="address-level2" required>
+                </div>
+                <div class="checkout-field">
+                  <label for="delivery-region">Estado o provincia</label>
+                  <input id="delivery-region" name="region" autocomplete="address-level1" required>
+                </div>
+                <div class="checkout-field">
+                  <label for="delivery-postal-code">Código postal</label>
+                  <input
+                    id="delivery-postal-code"
+                    name="postalCode"
+                    autocomplete="postal-code"
+                    required
+                  >
+                </div>
+                <div class="checkout-field">
+                  <label for="delivery-phone">Teléfono de contacto</label>
+                  <input
+                    id="delivery-phone"
+                    name="phone"
+                    type="tel"
+                    autocomplete="tel"
+                    required
+                  >
+                </div>
+              </div>
+
+              <div class="checkout-navigation-actions">
+                <button
+                  class="button button-outline checkout-back"
+                  id="checkout-back-to-review"
+                  type="button"
+                >
+                  ← Volver al resumen
+                </button>
+                <button class="button button-dark checkout-next" type="submit">
+                  Continuar al pago <span aria-hidden="true">→</span>
+                </button>
+              </div>
+            </form>
+
+            <aside class="checkout-card checkout-final-summary" aria-labelledby="final-summary-title">
+              <h2 id="final-summary-title">Tu compra</h2>
+              <p><span>Artículos</span><strong id="checkout-final-count">0</strong></p>
+              <p><span>Subtotal</span><strong id="checkout-final-subtotal">$0.00</strong></p>
+              <p><span>Envío e impuestos</span><strong>Por calcular</strong></p>
+            </aside>
+          </div>
+        </section>
+
+        <section
+          class="checkout-step"
+          id="checkout-payment"
+          aria-labelledby="checkout-title"
+          hidden
+        >
+          <div class="checkout-details-grid">
+            <form class="checkout-card checkout-form" id="payment-form">
+              <h2>Método de pago</h2>
+              <fieldset class="payment-methods">
+                <legend>Selecciona cómo deseas pagar</legend>
+                <label>
+                  <input type="radio" name="paymentMethod" value="card" required>
+                  <span>Tarjeta de crédito o débito</span>
+                </label>
+                <label>
+                  <input type="radio" name="paymentMethod" value="transfer">
+                  <span>Transferencia bancaria</span>
+                </label>
+                <label>
+                  <input type="radio" name="paymentMethod" value="delivery">
+                  <span>Pago contra entrega</span>
+                </label>
+              </fieldset>
+
+              <fieldset class="payment-card-fields" id="payment-card-fields" hidden>
+                <legend>Datos de la tarjeta</legend>
+                <div class="checkout-field-grid">
+                  <div class="checkout-field checkout-field-full">
+                    <label for="cardholder-name">Nombre en la tarjeta</label>
+                    <input id="cardholder-name" name="cardholder" autocomplete="cc-name">
+                  </div>
+                  <div class="checkout-field checkout-field-full">
+                    <label for="card-number">Número de tarjeta</label>
+                    <input
+                      id="card-number"
+                      name="cardNumber"
+                      inputmode="numeric"
+                      autocomplete="cc-number"
+                      maxlength="19"
+                      pattern="[0-9 ]{13,19}"
+                      title="Ingresa entre 13 y 19 dígitos."
+                    >
+                  </div>
+                  <div class="checkout-field">
+                    <label for="card-expiry">Vencimiento</label>
+                    <input
+                      id="card-expiry"
+                      name="cardExpiry"
+                      autocomplete="cc-exp"
+                      inputmode="numeric"
+                      placeholder="MM/AA"
+                      maxlength="5"
+                      pattern="(0[1-9]|1[0-2])/[0-9]{2}"
+                      title="Usa el formato MM/AA."
+                    >
+                  </div>
+                  <div class="checkout-field">
+                    <label for="card-security-code">Código de seguridad</label>
+                    <input
+                      id="card-security-code"
+                      name="cardSecurityCode"
+                      inputmode="numeric"
+                      autocomplete="cc-csc"
+                      maxlength="4"
+                      pattern="[0-9]{3,4}"
+                      title="Ingresa 3 o 4 dígitos."
+                    >
+                  </div>
+                </div>
+              </fieldset>
+
+              <p class="checkout-note">
+                Prototipo: los datos de pago no se guardan ni se envían a un servicio real.
+              </p>
+              <p class="form-message" id="checkout-message" role="status" aria-live="polite"></p>
+              <div class="checkout-navigation-actions">
+                <button
+                  class="button button-outline checkout-back"
+                  id="checkout-back-to-address"
+                  type="button"
+                >
+                  ← Volver a dirección
+                </button>
+                <button class="button button-dark checkout-next" type="submit">
+                  Finalizar compra <span aria-hidden="true">→</span>
+                </button>
+              </div>
+            </form>
+
+            <aside class="checkout-card checkout-final-summary" aria-labelledby="payment-summary-title">
+              <h2 id="payment-summary-title">Tu compra</h2>
+              <p><span>Artículos</span><strong id="payment-final-count">0</strong></p>
+              <p><span>Subtotal</span><strong id="payment-final-subtotal">$0.00</strong></p>
+              <p><span>Envío e impuestos</span><strong>Por calcular</strong></p>
+            </aside>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <a class="wordmark footer-wordmark" href="Index.html#inicio">amway<span>.</span></a>
+      <p>Bienestar para cada día, en cada etapa de tu vida.</p>
+      <span>© 2026 Amway</span>
+    </footer>
+  </body>
+</html>
