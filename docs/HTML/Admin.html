@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f5f1">
+    <meta
+      name="description"
+      content="Portal de administración y punto de venta de Amway."
+    >
+
+    <title>Administración | Amway</title>
+
+    <!-- Tipografías utilizadas en el portal. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+      rel="stylesheet"
+    >
+
+    <!-- Hoja de estilos y lógica exclusivos del módulo de administración. -->
+    <link rel="stylesheet" href="../CSS/admin.css">
+    <script src="../JS/products.js" defer></script>
+    <script src="../JS/admin.js" defer></script>
+  </head>
+
+  <body>
+    <!-- Acceso de demostración: no proporciona autenticación real. -->
+    <main class="login-screen" id="login-screen">
+      <form class="login-card" id="login-form">
+        <a
+          class="brand"
+          href="Index.html"
+          aria-label="Amway, volver a la tienda"
+        >
+          amway<span>.</span>
+        </a>
+
+        <p class="eyebrow">Espacio de administración</p>
+        <h1>Bienvenido de nuevo</h1>
+        <p class="login-copy">
+          Ingresa para abrir el panel de control de la tienda.
+        </p>
+
+        <label for="login-email">Correo electrónico</label>
+        <input
+          id="login-email"
+          name="email"
+          type="email"
+          autocomplete="username"
+          required
+          value="admin@amway.demo"
+        >
+
+        <label for="login-password">Contraseña</label>
+        <input
+          id="login-password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+          required
+        >
+
+        <button class="button button-primary login-submit" type="submit">
+          Entrar al portal
+          <span aria-hidden="true">→</span>
+        </button>
+
+        <p class="demo-credentials">
+          <strong>Acceso demo</strong><br>
+          admin@amway.demo · amway123
+        </p>
+        <p class="security-note">
+          Prototipo: el acceso no es seguro y los datos se guardan solo en este
+          navegador. No uses credenciales ni datos reales.
+        </p>
+      </form>
+    </main>
+
+    <!-- Estructura del panel que muestra las vistas creadas por admin.js. -->
+    <div class="admin-app" id="admin-app" hidden>
+      <!-- Navegación principal entre las secciones del portal. -->
+      <aside
+        class="sidebar"
+        aria-label="Navegación de administración"
+      >
+        <a class="brand sidebar-brand" href="Admin.html">
+          amway<span>.</span>
+          <small>ADMIN</small>
+        </a>
+
+        <p class="nav-label">GESTIÓN</p>
+        <nav class="side-nav" aria-label="Secciones de gestión">
+          <button
+            class="nav-link is-active"
+            type="button"
+            data-view="dashboard"
+          >
+            <span aria-hidden="true">▦</span>
+            Resumen
+          </button>
+          <button class="nav-link" type="button" data-view="pos">
+            <span aria-hidden="true">▣</span>
+            Punto de venta
+            <span class="nav-tag">POS</span>
+          </button>
+          <button class="nav-link" type="button" data-view="products">
+            <span aria-hidden="true">◇</span>
+            Productos
+          </button>
+          <button class="nav-link" type="button" data-view="inventory">
+            <span aria-hidden="true">▤</span>
+            Inventario
+          </button>
+          <button class="nav-link" type="button" data-view="categories">
+            <span aria-hidden="true">▧</span>
+            Categorías
+          </button>
+          <button class="nav-link" type="button" data-view="customers">
+            <span aria-hidden="true">♙</span>
+            Clientes
+          </button>
+          <button class="nav-link" type="button" data-view="sales">
+            <span aria-hidden="true">↗</span>
+            Ventas
+          </button>
+          <button class="nav-link" type="button" data-view="admins">
+            <span aria-hidden="true">♧</span>
+            Administradores
+          </button>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <p>Panel local de demostración</p>
+          <a href="Index.html">← Volver a la tienda</a>
+        </div>
+      </aside>
+
+      <!-- Encabezado, contenido dinámico y pie de página. -->
+      <div class="main-column">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">OPERACIONES · AMWAY</p>
+            <h1 id="page-title">Resumen</h1>
+          </div>
+
+          <div class="topbar-actions">
+            <span class="demo-badge">
+              <span aria-hidden="true"></span>
+              Modo demo
+            </span>
+            <button
+              class="avatar-button"
+              id="logout-button"
+              type="button"
+              aria-label="Cerrar sesión"
+            >
+              AD
+              <span aria-hidden="true">⌄</span>
+            </button>
+          </div>
+        </header>
+
+        <div class="demo-warning" role="note">
+          <strong>Prototipo local.</strong>
+          Esta sesión no ofrece seguridad real; los cambios se guardan en este
+          navegador y no se sincronizan con la tienda pública.
+        </div>
+
+        <!-- admin.js reemplaza este contenedor al cambiar de sección. -->
+        <main class="page-content" id="page-content"></main>
+
+        <footer class="page-footer">
+          Amway · Portal de administración · Prototipo
+        </footer>
+      </div>
+    </div>
+
+    <!-- Diálogo compartido por los formularios de creación y edición. -->
+    <dialog
+      class="entity-dialog"
+      id="entity-dialog"
+      aria-labelledby="dialog-title"
+    >
+      <form id="entity-form" method="dialog">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">GESTIÓN DE DATOS</p>
+            <h2 id="dialog-title"></h2>
+          </div>
+
+          <button
+            class="icon-button"
+            type="button"
+            data-action="close-dialog"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+        </div>
+
+        <!-- Campos generados según la entidad seleccionada. -->
+        <div class="dialog-fields" id="dialog-fields"></div>
+        <p class="form-error" id="form-error" role="alert" hidden></p>
+
+        <div class="dialog-actions">
+          <button
+            class="button button-quiet"
+            type="button"
+            data-action="close-dialog"
+          >
+            Cancelar
+          </button>
+          <button class="button button-primary" type="submit">
+            Guardar cambios
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Región accesible para mensajes de confirmación y error. -->
+    <div
+      class="toast-region"
+      id="toast-region"
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
+  </body>
+</html>
