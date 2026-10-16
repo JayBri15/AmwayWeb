@@ -1,0 +1,25 @@
+{
+  "name": "amway-storefront",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --test",
+    "format": "prettier --write \"src/**/*.{js,jsx,css,html}\" \"tests/**/*.js\" \"vite.config.js\" \"README.md\"",
+    "format:check": "prettier --check \"src/**/*.{js,jsx,css,html}\" \"tests/**/*.js\" \"vite.config.js\" \"README.md\""
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.11",
+    "@vitejs/plugin-react": "^4.7.0",
+    "prettier": "^3.9.10",
+    "tailwindcss": "^4.1.11",
+    "vite": "^6.3.5"
+  }
+}
