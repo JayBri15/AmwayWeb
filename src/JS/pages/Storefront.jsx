@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useId, useMemo, useState } from "react";
 import { CART_KEY, DATA_KEY, loadCart, readCatalog, saveCart } from "../services/catalogStorage.js";
 import { DEFAULT_PRODUCTS } from "../data/defaultCatalog.js";
 import { money } from "../shared/format.js";
@@ -58,6 +58,121 @@ function ProductCard({ product, onAdd }) {
         </div>
       </div>
     </article>
+  );
+}
+
+/**
+ * Barra de búsqueda con sugerencias visuales y navegación por teclado.
+ * @param {{query: string, onQueryChange: (value: string) => void, products: import("../models.js").Product[], onSelect: (product: import("../models.js").Product) => void}} props
+ */
+function ProductSearch({ query, onQueryChange, products, onSelect }) {
+  const listId = useId();
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const suggestions = query.trim() ? products.slice(0, 5) : [];
+
+  // Cierra la lista al hacer clic fuera y evita dejarla abierta tras desmontar.
+  useEffect(() => {
+    const closeOnOutsideClick = (event) => {
+      if (!event.target.closest("[data-product-search]")) setIsOpen(false);
+    };
+    document.addEventListener("click", closeOnOutsideClick);
+    return () => document.removeEventListener("click", closeOnOutsideClick);
+  }, []);
+
+  // Permite recorrer sugerencias, seleccionar con Enter o cerrar con Escape.
+  const handleKeyDown = (event) => {
+    if (event.key === "Escape") {
+      setIsOpen(false);
+      setActiveIndex(-1);
+    } else if (event.key === "ArrowDown" && suggestions.length) {
+      event.preventDefault();
+      setIsOpen(true);
+      setActiveIndex((index) => (index + 1) % suggestions.length);
+    } else if (event.key === "ArrowUp" && suggestions.length) {
+      event.preventDefault();
+      setIsOpen(true);
+      setActiveIndex((index) => (index <= 0 ? suggestions.length - 1 : index - 1));
+    } else if (event.key === "Enter" && activeIndex >= 0 && suggestions[activeIndex]) {
+      event.preventDefault();
+      onSelect(suggestions[activeIndex]);
+      setIsOpen(false);
+      setActiveIndex(-1);
+    }
+  };
+
+  return (
+    <div className="relative" data-product-search>
+      <label className="block">
+        <span className="sr-only">Buscar productos</span>
+        <input
+          className="input rounded-full"
+          type="search"
+          value={query}
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={isOpen && suggestions.length > 0}
+          aria-controls={listId}
+          aria-activedescendant={activeIndex >= 0 ? `${listId}-option-${activeIndex}` : undefined}
+          onChange={(event) => {
+            onQueryChange(event.target.value);
+            setIsOpen(true);
+            setActiveIndex(-1);
+          }}
+          onFocus={() => setIsOpen(true)}
+          onKeyDown={handleKeyDown}
+          placeholder="¿Qué estás buscando?"
+        />
+      </label>
+      {isOpen && query.trim() && (
+        <div
+          id={listId}
+          className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 max-h-96 overflow-y-auto rounded-lg border border-line bg-white p-2 shadow-xl"
+          role="listbox"
+          aria-label="Productos coincidentes"
+        >
+          {suggestions.length ? (
+            suggestions.map((product, index) => (
+              <button
+                id={`${listId}-option-${index}`}
+                key={product.id}
+                type="button"
+                role="option"
+                aria-selected={index === activeIndex}
+                className={`grid w-full grid-cols-[3.5rem_1fr_auto] items-center gap-3 rounded-md p-2 text-left transition ${
+                  index === activeIndex ? "bg-[#eff2e7]" : "hover:bg-[#f5f4ed]"
+                }`}
+                onMouseEnter={() => setActiveIndex(index)}
+                onClick={() => {
+                  onSelect(product);
+                  setIsOpen(false);
+                  setActiveIndex(-1);
+                }}
+              >
+                <img
+                  className="h-14 w-14 rounded object-cover"
+                  src={product.image || DEFAULT_PRODUCTS[0].image}
+                  alt=""
+                />
+                <span className="min-w-0">
+                  <strong className="block truncate text-sm">{product.name}</strong>
+                  <span className="block truncate text-xs text-muted">
+                    {product.category} · {product.detail}
+                  </span>
+                </span>
+                <span className="whitespace-nowrap text-xs font-semibold">
+                  {money(product.price)}
+                </span>
+              </button>
+            ))
+          ) : (
+            <p className="px-3 py-4 text-sm text-muted" role="status">
+              No encontramos productos coincidentes.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -158,10 +273,26 @@ function CartDrawer({ open, onClose, cart, products, onChange, onCheckout }) {
                       {money(item.price * item.quantity)}
                     </strong>
                     <button
-                      className="text-xs text-[#9d5144] underline underline-offset-2"
+                      className="grid h-9 w-9 place-items-center rounded-full text-[#9d5144] transition hover:bg-[#f8ece9]"
                       onClick={() => onChange(item.id, 0)}
+                      aria-label={`Eliminar ${item.name} del carrito`}
+                      title="Eliminar del carrito"
                     >
-                      Eliminar
+                      <svg
+                        aria-hidden="true"
+                        className="h-5 w-5"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M3 6h18" />
+                        <path d="M8 6V4h8v2" />
+                        <path d="m19 6-1 14H6L5 6" />
+                        <path d="M10 11v5M14 11v5" />
+                      </svg>
                     </button>
                   </div>
                 </article>
@@ -187,8 +318,29 @@ function CartDrawer({ open, onClose, cart, products, onChange, onCheckout }) {
 /** Explica el requisito de cuenta y mantiene deshabilitado el acceso no autenticado. */
 function AccountGate({ mode, onBack }) {
   const signup = mode === "crear-cuenta";
+  const [password, setPassword] = useState("");
+  const passwordRequirements = [
+    { label: "Al menos 8 caracteres", met: password.length >= 8 },
+    { label: "Una letra mayúscula", met: /[A-Z]/.test(password) },
+    { label: "Una letra minúscula", met: /[a-z]/.test(password) },
+    { label: "Un número", met: /\d/.test(password) },
+    { label: "Un carácter especial (por ejemplo: !, @ o #)", met: /[^A-Za-z0-9]/.test(password) },
+  ];
+  const metRequirements = passwordRequirements.filter((requirement) => requirement.met).length;
+  const progressColor =
+    metRequirements === passwordRequirements.length
+      ? "bg-[#2f855a]"
+      : metRequirements >= Math.ceil(passwordRequirements.length / 2)
+        ? "bg-[#d69e2e]"
+        : "bg-[#c53030]";
   return (
-    <main className="mx-auto grid min-h-[70vh] max-w-5xl items-center px-5 py-10 lg:grid-cols-[.9fr_1fr]">
+    <main className="mx-auto grid min-h-screen max-w-5xl items-center px-5 py-16 lg:grid-cols-[.9fr_1fr]">
+      <button
+        className="fixed left-5 top-5 z-40 rounded-full border border-line bg-white/90 px-4 py-2 text-sm font-semibold text-muted shadow-sm transition hover:bg-white hover:text-ink"
+        onClick={onBack}
+      >
+        ← Volver a la página principal
+      </button>
       <div className="hidden h-full min-h-[32rem] flex-col justify-between rounded-l-xl bg-leaf p-10 text-white lg:flex">
         <p className="text-xs uppercase tracking-[.25em] text-lime">Bienestar para cada día</p>
         <p className="font-display text-5xl leading-tight">
@@ -201,9 +353,6 @@ function AccountGate({ mode, onBack }) {
         <span className="text-xs tracking-widest">AMWAY · DESDE 1959</span>
       </div>
       <section className="rounded-xl border border-line bg-white p-7 shadow-sm sm:p-12">
-        <button className="mb-8 text-sm text-muted hover:text-ink" onClick={onBack}>
-          ← Volver a la tienda
-        </button>
         <p className="text-xs font-bold uppercase tracking-[.2em] text-[#72805a]">
           Tu cuenta Amway
         </p>
@@ -233,9 +382,45 @@ function AccountGate({ mode, onBack }) {
               type="password"
               autoComplete={signup ? "new-password" : "current-password"}
               placeholder="Tu contraseña"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
               required
             />
           </label>
+          {signup && (
+            <div aria-live="polite" className="-mt-2">
+              <div
+                className="h-2 overflow-hidden rounded-full bg-[#e7e7e0]"
+                role="progressbar"
+                aria-label="Seguridad de la contraseña"
+                aria-valuemin={0}
+                aria-valuemax={passwordRequirements.length}
+                aria-valuenow={metRequirements}
+              >
+                <div
+                  className={`h-full rounded-full transition-[width,background-color] duration-300 ${progressColor}`}
+                  style={{
+                    width: `${(metRequirements / passwordRequirements.length) * 100}%`,
+                  }}
+                />
+              </div>
+              <ul className="mt-3 grid gap-1.5 text-xs">
+                {passwordRequirements.map((requirement) => (
+                  <li
+                    key={requirement.label}
+                    className={`flex items-center gap-2 ${
+                      requirement.met ? "text-[#2f855a]" : "text-[#c53030]"
+                    }`}
+                  >
+                    <span aria-hidden="true" className="w-4 text-center font-bold">
+                      {requirement.met ? "✓" : "×"}
+                    </span>
+                    {requirement.label}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
           {signup && (
             <label>
               <span className="label">Confirmar contraseña</span>
@@ -271,10 +456,19 @@ export function Storefront() {
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [query, setQuery] = useState("");
   const [cartOpen, setCartOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(() => window.scrollY > 40);
   const [route, setRoute] = useState(window.location.hash.replace("#", ""));
   const { notify, region } = useNotice();
   const accountMode = ["iniciar-sesion", "crear-cuenta"].includes(route);
   const isCategory = catalog.categories.includes(decodeURIComponent(route));
+
+  // Reduce el header fijo al desplazarse para dejar más espacio al contenido.
+  useEffect(() => {
+    const updateScrollState = () => setIsScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", updateScrollState, { passive: true });
+    updateScrollState();
+    return () => window.removeEventListener("scroll", updateScrollState);
+  }, []);
 
   // Lee la fuente compartida y ajusta el carrito tras cambios de inventario.
   const refresh = useCallback(() => {
@@ -320,11 +514,30 @@ export function Storefront() {
     });
   }, [activeCategory, catalog.products, isCategory, query, route]);
 
+  // Busca sugerencias en todo el catálogo, independiente del filtro de categoría.
+  const searchMatches = useMemo(() => {
+    const searchTerm = query.trim().toLocaleLowerCase("es-MX");
+    if (!searchTerm) return [];
+    return catalog.products.filter((product) =>
+      `${product.name} ${product.category} ${product.detail} ${product.sku}`
+        .toLocaleLowerCase("es-MX")
+        .includes(searchTerm)
+    );
+  }, [catalog.products, query]);
+
+  // Seleccionar una sugerencia muestra su categoría y lleva al resultado filtrado.
+  const selectSearchResult = (product) => {
+    setQuery(product.name);
+    setActiveCategory("Todos");
+    window.location.hash = "todos-productos";
+    document.getElementById("todos-productos")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   // Modifica una unidad del carrito, verifica inventario y persiste antes de actualizar la UI.
   const changeCart = (productId, difference) => {
     const product = catalog.products.find((item) => item.id === productId);
     const current = cart.find((item) => item.id === productId)?.quantity || 0;
-    if (difference === 0) {
+    if (difference === 0 || current + difference <= 0) {
       const updated = cart.filter((item) => item.id !== productId);
       if (!saveCart(updated)) {
         notify("No se pudo guardar el carrito.", "error");
@@ -368,63 +581,75 @@ export function Storefront() {
   // Renderiza cabecera, contenido de tienda o cuenta, avisos y carrito compartido.
   return (
     <div className="page-shell">
-      <div className="bg-leaf px-4 py-2 text-center text-[.7rem] tracking-[.12em] text-white sm:text-xs">
-        Bienestar que se siente. Calidad en la que puedes confiar.
-      </div>
-      <header className="sticky top-0 z-30 border-b border-line/70 bg-paper/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-7">
-          <Brand to="./#inicio" />
-          <div className="hidden max-w-xl flex-1 md:block">
-            <label className="relative block">
-              <span className="sr-only">Buscar productos</span>
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted">⌕</span>
-              <input
-                className="input rounded-full pl-11"
-                type="search"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="¿Qué estás buscando?"
-              />
-            </label>
+      {!accountScreen && (
+        <>
+          <div className="bg-leaf px-4 py-2 text-center text-[.7rem] tracking-[.12em] text-white sm:text-xs">
+            Bienestar que se siente. Calidad en la que puedes confiar.
           </div>
-          <div className="flex items-center gap-3 sm:gap-5">
-            <a href="#iniciar-sesion" className="hidden text-sm font-semibold sm:block">
-              Iniciar sesión
-            </a>
-            <button
-              className="relative grid h-11 w-11 place-items-center rounded-full border border-line bg-white text-xl"
-              onClick={() => setCartOpen(true)}
-              aria-label="Abrir carrito"
+          <header className="sticky top-0 z-30 border-b border-line/70 bg-paper/95 backdrop-blur">
+            <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-4 py-4 sm:gap-4 sm:px-7">
+              <Brand to="./#inicio" />
+              <div className="min-w-0 max-w-xl flex-1">
+                <ProductSearch
+                  query={query}
+                  onQueryChange={setQuery}
+                  products={searchMatches}
+                  onSelect={selectSearchResult}
+                />
+              </div>
+              <div className="flex shrink-0 items-center gap-2 sm:gap-5">
+                <a
+                  href="#iniciar-sesion"
+                  className="whitespace-nowrap text-xs font-semibold sm:text-sm"
+                >
+                  <span className="sm:hidden">Entrar</span>
+                  <span className="hidden sm:inline">Iniciar sesión</span>
+                </a>
+                <button
+                  className="relative grid h-11 w-11 place-items-center rounded-full border border-line bg-white text-xl"
+                  onClick={() => setCartOpen(true)}
+                  aria-label="Abrir carrito"
+                >
+                  ♧
+                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-leaf px-1 text-[.65rem] text-white">
+                    {cart.reduce((sum, item) => sum + item.quantity, 0)}
+                  </span>
+                </button>
+              </div>
+            </div>
+            <div
+              className={`overflow-hidden transition-[max-height,opacity] duration-200 ${
+                isScrolled ? "max-h-0 opacity-0" : "max-h-20 opacity-100"
+              }`}
+              aria-hidden={isScrolled}
+              inert={isScrolled}
             >
-              ♧
-              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-leaf px-1 text-[.65rem] text-white">
-                {cart.reduce((sum, item) => sum + item.quantity, 0)}
-              </span>
-            </button>
-          </div>
-        </div>
-        <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 pb-3 sm:px-7">
-          {["Todos", ...catalog.categories].map((category) => (
-            <button
-              key={category}
-              onClick={() => {
-                setActiveCategory(category);
-                window.location.hash =
-                  category === "Todos" ? "todos-productos" : encodeURIComponent(category);
-              }}
-              className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition ${(isCategory && decodeURIComponent(route) === category) || (!isCategory && activeCategory === category) ? "bg-leaf text-white" : "text-muted hover:bg-white"}`}
-            >
-              {category}
-            </button>
-          ))}
-          <a
-            className="ml-auto hidden whitespace-nowrap px-2 py-2 text-xs font-semibold text-muted hover:text-leaf lg:block"
-            href="?page=admin"
-          >
-            Portal de administración ↗
-          </a>
-        </div>
-      </header>
+              <div className="mx-auto flex max-w-7xl gap-2 overflow-x-auto px-4 pb-3 sm:px-7">
+                {["Todos", ...catalog.categories].map((category) => (
+                  <button
+                    key={category}
+                    onClick={() => {
+                      setActiveCategory(category);
+                      window.location.hash =
+                        category === "Todos" ? "todos-productos" : encodeURIComponent(category);
+                      if (category !== "Todos") window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition ${(isCategory && decodeURIComponent(route) === category) || (!isCategory && activeCategory === category) ? "bg-leaf text-white" : "text-muted hover:bg-white"}`}
+                  >
+                    {category}
+                  </button>
+                ))}
+                <a
+                  className="ml-auto hidden whitespace-nowrap px-2 py-2 text-xs font-semibold text-muted hover:text-leaf lg:block"
+                  href="?page=admin"
+                >
+                  Portal de administración ↗
+                </a>
+              </div>
+            </div>
+          </header>
+        </>
+      )}
 
       {accountScreen ? (
         <AccountGate
@@ -436,86 +661,111 @@ export function Storefront() {
       ) : (
         <>
           <main>
-            <section className="relative isolate overflow-hidden bg-[#e8ebe0]">
-              <div className="absolute inset-0 -z-10 bg-[url('https://images.unsplash.com/photo-1547887538-e3a2f32cb1cc?auto=format&fit=crop&w=1800&q=85')] bg-cover bg-center opacity-20" />
-              <div className="mx-auto grid min-h-[33rem] max-w-7xl items-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[1fr_.8fr] lg:py-20">
-                <div className="max-w-2xl">
-                  <p className="mb-5 flex items-center gap-3 text-xs font-bold uppercase tracking-[.2em] text-[#66764e]">
-                    <span className="h-px w-8 bg-[#66764e]" />
-                    Bienestar, a tu manera
+            {isCategory ? (
+              <section className="bg-[#e8ebe0] px-5 py-12 sm:px-8 sm:py-16">
+                <div className="mx-auto max-w-7xl">
+                  <a
+                    href="./#inicio"
+                    className="text-sm font-semibold text-leaf underline underline-offset-4"
+                  >
+                    ← Volver a la página principal
+                  </a>
+                  <p className="mt-10 text-xs font-bold uppercase tracking-[.2em] text-[#66764e]">
+                    Explora la categoría
                   </p>
-                  <h1 className="font-display text-5xl leading-[1.08] sm:text-6xl lg:text-7xl">
-                    Pequeñas elecciones.
-                    <br />
-                    <em className="text-leaf">Una vida más plena.</em>
+                  <h1 className="mt-3 font-display text-4xl sm:text-6xl">
+                    {decodeURIComponent(route)}
                   </h1>
-                  <p className="mt-6 max-w-lg text-base leading-7 text-muted">
-                    Encuentra tus esenciales para sentirte bien, cuidar de los tuyos y hacer de cada
-                    día algo mejor.
+                  <p className="mt-4 max-w-xl text-base leading-7 text-muted">
+                    Encuentra productos seleccionados de {decodeURIComponent(route)} para
+                    acompañarte cada día.
                   </p>
-                  <a href="#todos-productos" className="btn-primary mt-8">
-                    Explorar productos <span aria-hidden="true">→</span>
-                  </a>
-                  <div className="mt-12 flex items-center gap-3 text-xs text-muted">
-                    <span className="grid h-9 w-9 place-items-center rounded-full bg-lime font-display text-lg font-bold">
-                      A
-                    </span>
-                    Calidad pensada para acompañarte
-                    <br />
-                    en cada momento.
-                  </div>
                 </div>
-                <div className="relative hidden aspect-[4/4.2] overflow-hidden rounded-[45%_45%_8px_8px] bg-[#c5cbb4] lg:block">
-                  <img
-                    className="h-full w-full object-cover mix-blend-multiply"
-                    src="https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1000&q=85"
-                    alt="Productos de cuidado y bienestar"
+              </section>
+            ) : (
+              <>
+                <section id="inicio" className="relative isolate overflow-hidden bg-[#e8ebe0]">
+                  <div className="absolute inset-0 -z-10 bg-[url('https://images.unsplash.com/photo-1547887538-e3a2f32cb1cc?auto=format&fit=crop&w=1800&q=85')] bg-cover bg-center opacity-20" />
+                  <div className="mx-auto grid min-h-[33rem] max-w-7xl items-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[1fr_.8fr] lg:py-20">
+                    <div className="max-w-2xl">
+                      <p className="mb-5 flex items-center gap-3 text-xs font-bold uppercase tracking-[.2em] text-[#66764e]">
+                        <span className="h-px w-8 bg-[#66764e]" />
+                        Bienestar, a tu manera
+                      </p>
+                      <h1 className="font-display text-5xl leading-[1.08] sm:text-6xl lg:text-7xl">
+                        Pequeñas elecciones.
+                        <br />
+                        <em className="text-leaf">Una vida más plena.</em>
+                      </h1>
+                      <p className="mt-6 max-w-lg text-base leading-7 text-muted">
+                        Encuentra tus esenciales para sentirte bien, cuidar de los tuyos y hacer de
+                        cada día algo mejor.
+                      </p>
+                      <a href="#todos-productos" className="btn-primary mt-8">
+                        Explorar productos <span aria-hidden="true">→</span>
+                      </a>
+                      <div className="mt-12 flex items-center gap-3 text-xs text-muted">
+                        <span className="grid h-9 w-9 place-items-center rounded-full bg-lime font-display text-lg font-bold">
+                          A
+                        </span>
+                        Calidad pensada para acompañarte
+                        <br />
+                        en cada momento.
+                      </div>
+                    </div>
+                    <div className="relative hidden aspect-[4/4.2] overflow-hidden rounded-[45%_45%_8px_8px] bg-[#c5cbb4] lg:block">
+                      <img
+                        className="h-full w-full object-cover mix-blend-multiply"
+                        src="https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=1000&q=85"
+                        alt="Productos de cuidado y bienestar"
+                      />
+                      <div className="absolute bottom-5 left-5 rounded bg-white/90 px-4 py-3 text-xs">
+                        <strong className="block uppercase tracking-widest">AMWAY</strong>Bienestar
+                        desde 1959
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                <section id="categorias" className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
+                  <SectionTitle
+                    eyebrow="Encuentra tu favorito"
+                    title={
+                      <>
+                        Un mundo de <em>posibilidades</em>
+                      </>
+                    }
+                    description="Explora las categorías y encuentra aquello que acompaña tu bienestar."
+                    action={
+                      <a
+                        href="#todos-productos"
+                        className="hidden text-sm font-semibold text-leaf underline underline-offset-4 sm:block"
+                      >
+                        Ver todos los productos →
+                      </a>
+                    }
                   />
-                  <div className="absolute bottom-5 left-5 rounded bg-white/90 px-4 py-3 text-xs">
-                    <strong className="block uppercase tracking-widest">AMWAY</strong>Bienestar
-                    desde 1959
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {catalog.categories.map((category, index) => (
+                      <a
+                        key={category}
+                        href={`#${encodeURIComponent(category)}`}
+                        onClick={() => setActiveCategory(category)}
+                        className={`group relative flex min-h-48 flex-col justify-between overflow-hidden rounded-lg p-6 ${categoryArt[index % categoryArt.length]} transition hover:-translate-y-1`}
+                      >
+                        <span className="text-xs font-bold uppercase tracking-[.15em] text-leaf">
+                          0{index + 1}
+                        </span>
+                        <span className="font-display text-2xl">{category}</span>
+                        <span className="absolute right-5 top-5 text-4xl text-leaf/25 transition group-hover:translate-x-1">
+                          ↗
+                        </span>
+                      </a>
+                    ))}
                   </div>
-                </div>
-              </div>
-            </section>
-            <section id="categorias" className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-24">
-              <SectionTitle
-                eyebrow="Encuentra tu favorito"
-                title={
-                  <>
-                    Un mundo de <em>posibilidades</em>
-                  </>
-                }
-                description="Explora las categorías y encuentra aquello que acompaña tu bienestar."
-                action={
-                  <a
-                    href="#todos-productos"
-                    className="hidden text-sm font-semibold text-leaf underline underline-offset-4 sm:block"
-                  >
-                    Ver todos los productos →
-                  </a>
-                }
-              />
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {catalog.categories.map((category, index) => (
-                  <a
-                    key={category}
-                    href={`#${encodeURIComponent(category)}`}
-                    onClick={() => setActiveCategory(category)}
-                    className={`group relative flex min-h-48 flex-col justify-between overflow-hidden rounded-lg p-6 ${categoryArt[index % categoryArt.length]} transition hover:-translate-y-1`}
-                  >
-                    <span className="text-xs font-bold uppercase tracking-[.15em] text-leaf">
-                      0{index + 1}
-                    </span>
-                    <span className="font-display text-2xl">{category}</span>
-                    <span className="absolute right-5 top-5 text-4xl text-leaf/25 transition group-hover:translate-x-1">
-                      ↗
-                    </span>
-                  </a>
-                ))}
-              </div>
-            </section>
-            <section id="todos-productos" className="bg-white py-16 sm:py-24">
+                </section>
+              </>
+            )}
+            <section id="todos-productos" className="scroll-mt-28 bg-white py-16 sm:py-24">
               <div className="mx-auto max-w-7xl px-5 sm:px-8">
                 <SectionTitle
                   eyebrow="Lo nuevo para ti"
@@ -545,7 +795,7 @@ export function Storefront() {
                                 ? "todos-productos"
                                 : encodeURIComponent(category);
                         }}
-                        className={`whitespace-nowrap rounded-full border px-4 py-2 text-xs ${activeCategory === category ? "border-leaf bg-leaf text-white" : "border-line hover:bg-paper"}`}
+                        className={`whitespace-nowrap rounded-full border px-4 py-2 text-xs ${(isCategory ? decodeURIComponent(route) : activeCategory) === category ? "border-leaf bg-leaf text-white" : "border-line hover:bg-paper"}`}
                       >
                         {category}
                       </button>
@@ -554,12 +804,11 @@ export function Storefront() {
                   <span className="text-xs text-muted">{filteredProducts.length} productos</span>
                 </div>
                 <div className="mb-6 md:hidden">
-                  <input
-                    className="input"
-                    type="search"
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Buscar producto"
+                  <ProductSearch
+                    query={query}
+                    onQueryChange={setQuery}
+                    products={searchMatches}
+                    onSelect={selectSearchResult}
                   />
                 </div>
                 {filteredProducts.length ? (
@@ -579,13 +828,15 @@ export function Storefront() {
                 )}
               </div>
             </section>
-            <section className="bg-leaf px-5 py-16 text-center text-white sm:py-20">
-              <p className="text-xs uppercase tracking-[.22em] text-lime">Nuestra promesa</p>
-              <h2 className="mt-3 font-display text-4xl sm:text-5xl">AMWAYPROMISE</h2>
-              <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/75">
-                La satisfacción siempre será nuestro objetivo y la protección, nuestra promesa.
-              </p>
-            </section>
+            {!isCategory && (
+              <section className="bg-leaf px-5 py-16 text-center text-white sm:py-20">
+                <p className="text-xs uppercase tracking-[.22em] text-lime">Nuestra promesa</p>
+                <h2 className="mt-3 font-display text-4xl sm:text-5xl">AMWAYPROMISE</h2>
+                <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-white/75">
+                  La satisfacción siempre será nuestro objetivo y la protección, nuestra promesa.
+                </p>
+              </section>
+            )}
           </main>
           <footer className="flex flex-col items-center justify-between gap-4 px-6 py-8 text-sm text-muted sm:flex-row sm:px-10">
             <Brand to="./#inicio" />

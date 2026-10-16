@@ -322,6 +322,9 @@ function AdminLogin({ onLogin, notice }) {
         <button className="btn-primary mt-6 w-full" type="submit">
           Entrar al portal →
         </button>
+        <a className="btn-secondary mt-3 w-full" href="./">
+          ← Regresar a la página principal
+        </a>
         <p className="mt-5 rounded bg-paper p-3 text-xs leading-5 text-muted">
           <strong className="text-ink">Acceso demo</strong>
           <br />
